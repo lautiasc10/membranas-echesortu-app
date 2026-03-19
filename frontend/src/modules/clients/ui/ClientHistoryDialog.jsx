@@ -17,7 +17,11 @@ export function ClientHistoryDialog({ open, onOpenChange, client, sales }) {
         if (!client || !sales) return [];
         return sales
             .filter((s) => (s.clientId ?? s.ClientId) === client.id)
-            .sort((a, b) => new Date(b.createdAt ?? b.Date) - new Date(a.createdAt ?? a.Date));
+            .sort((a, b) => {
+                const dateA = new Date(a.date ?? a.Date ?? a.createdAt);
+                const dateB = new Date(b.date ?? b.Date ?? b.createdAt);
+                return dateB - dateA;
+            });
     }, [client, sales]);
 
     const money = (v) =>
@@ -36,7 +40,7 @@ export function ClientHistoryDialog({ open, onOpenChange, client, sales }) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <ShoppingBag className="size-5 text-emerald-600" />
@@ -68,7 +72,7 @@ export function ClientHistoryDialog({ open, onOpenChange, client, sales }) {
                                     {clientSales.map((s) => (
                                         <TableRow key={s.id} className="hover:bg-slate-50/50">
                                             <TableCell className="text-xs font-medium text-slate-600">
-                                                {formatDate(s.createdAt ?? s.Date)}
+                                                {formatDate(s.date ?? s.Date ?? s.createdAt)}
                                             </TableCell>
                                             <TableCell className="font-mono text-[10px] text-muted-foreground">
                                                 #{String(s.id).padStart(5, "0")}

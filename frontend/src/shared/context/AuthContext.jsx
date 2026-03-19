@@ -1,46 +1,55 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { getMe, logoutApi } from "../../services/auth.api";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    const [token, setToken] = useState(() => localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token"));
-    const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("auth_user") || sessionStorage.getItem("auth_user");
-        return saved ? JSON.parse(saved) : null;
-    });
+    const [user, setUser] = useState(null);
+    const [loadingAuth, setLoadingAuth] = useState(true);
 
-    const isAuthenticated = !!token;
+    useEffect(() => {
+        let isMounted = true;
 
-    function loginStore(tokenValue, refreshTokenValue, userData, rememberMe = true) {
-        if (rememberMe) {
-            localStorage.setItem("auth_token", tokenValue);
-            if (refreshTokenValue) localStorage.setItem("refresh_token", refreshTokenValue);
-            if (userData) localStorage.setItem("auth_user", JSON.stringify(userData));
-        } else {
-            sessionStorage.setItem("auth_token", tokenValue);
-            if (refreshTokenValue) sessionStorage.setItem("refresh_token", refreshTokenValue);
-            if (userData) sessionStorage.setItem("auth_user", JSON.stringify(userData));
-        }
-        setToken(tokenValue);
+        const verifySession = async () => {
+            try {
+                const userData = await getMe();
+                if (isMounted) setUser(userData);
+            } catch {
+                if (isMounted) setUser(null);
+            } finally {
+                if (isMounted) setLoadingAuth(false);
+            }
+        };
+
+        verifySession();
+
+        const handleLogoutEvent = () => logout();
+        window.addEventListener("auth:logout", handleLogoutEvent);
+        return () => {
+            isMounted = false;
+            window.removeEventListener("auth:logout", handleLogoutEvent);
+        };
+    }, []);
+
+    const isAuthenticated = !!user;
+
+    function loginStore(userData) {
         setUser(userData || null);
     }
 
-    function logout() {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("auth_user");
-        sessionStorage.removeItem("auth_token");
-        sessionStorage.removeItem("refresh_token");
-        sessionStorage.removeItem("auth_user");
-        setToken(null);
-        setUser(null);
+    async function logout() {
+        try {
+            await logoutApi();
+        } catch { } // Call backend to clear the HttpOnly cookies, ignoring non-200 responses
 
-        // Disparar evento para que el CartContext escuche y borre el carrito
+        setUser(null);
         window.dispatchEvent(new Event("cart:clear"));
     }
 
+    if (loadingAuth) return <div className="p-8 text-center text-gray-500">Cargando sesión...</div>;
+
     return (
-        <AuthContext.Provider value={{ token, user, isAuthenticated, loginStore, logout }}>
+        <AuthContext.Provider value={{ user, isAuthenticated, loginStore, logout }}>
             {children}
         </AuthContext.Provider>
     );

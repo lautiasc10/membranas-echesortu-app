@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil, Search, FileText, Printer } from "lucide-react";
 import { QuoteForm } from "../ui/QuoteForm";
+import { DeleteConfirmDialog } from "../../../shared/ui/DeleteConfirmDialog";
 
 const currency = (n) =>
     new Intl.NumberFormat("es-AR", {
@@ -44,6 +45,7 @@ export function QuotesPage() {
     // Form states
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingQuoteId, setEditingQuoteId] = useState(null);
+    const [quoteToDelete, setQuoteToDelete] = useState(null);
 
     // Data for form
     const [variants, setVariants] = useState([]);
@@ -84,11 +86,16 @@ export function QuotesPage() {
         setIsFormOpen(true);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("¿Eliminar este presupuesto?")) return;
+    const handleDelete = (id) => {
+        setQuoteToDelete(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!quoteToDelete) return;
         try {
-            await quotesRepository.deleteQuote(id);
+            await quotesRepository.deleteQuote(quoteToDelete);
             toast.success("Presupuesto eliminado");
+            setQuoteToDelete(null);
             loadList();
         } catch {
             toast.error("No se pudo eliminar");
@@ -115,7 +122,7 @@ export function QuotesPage() {
         <div className="flex-1 p-6 lg:p-10 mx-auto max-w-7xl animate-in fade-in zoom-in-95 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+                    <h1 className="text-3xl text-foreground flex items-center gap-3">
                         <div className="p-2.5 bg-primary/10 text-primary rounded-xl ring-1 ring-primary/20 shadow-sm">
                             <FileText className="size-6" />
                         </div>
@@ -202,7 +209,7 @@ export function QuotesPage() {
             </div>
 
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                     <DialogHeader>
                         <DialogTitle>
                             {editingQuoteId ? "Editar Presupuesto" : "Nuevo Presupuesto"}
@@ -222,6 +229,14 @@ export function QuotesPage() {
                     )}
                 </DialogContent>
             </Dialog>
+
+            <DeleteConfirmDialog
+                open={quoteToDelete != null}
+                onOpenChange={(v) => !v && setQuoteToDelete(null)}
+                onConfirm={confirmDelete}
+                title="Eliminar presupuesto"
+                description="¿Seguro querés eliminar este presupuesto? Esta acción no se puede deshacer."
+            />
         </div>
     );
 }

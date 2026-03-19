@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace Web.Services;
+namespace Application.Interfaces;
 
 public interface IImageStorageService
 {

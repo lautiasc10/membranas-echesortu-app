@@ -23,33 +23,45 @@ function StatusBadge({ level, label }) {
   return <span className={`inline-flex items-center justify-center rounded-sm border px-1.5 h-3.5 text-[7px] font-black uppercase leading-none ${map[level] || map.ok}`}>{label}</span>;
 }
 
-export function DashboardView({ loading, error, vm, onGoToAnalytics, onExport, onViewInventory, onViewSales }) {
+export function DashboardView({ loading, error, vm, onGoToAnalytics, onExport, onViewInventory, onViewSales, onMonthChange }) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">{vm.header.title}</h1>
+          <h1 className="text-3xl text-foreground">{vm.header.title}</h1>
           <p className="text-muted-foreground text-sm">{vm.header.subtitle}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-black uppercase tracking-widest text-accent">
-            <Calendar className="size-3" />
-            Últimos 30 días
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-2 h-9 shadow-sm shrink-0">
+            <Calendar className="size-3.5 text-muted-foreground" />
+            <select
+              className="bg-transparent text-[10px] font-bold uppercase tracking-widest text-foreground focus:outline-none cursor-pointer pr-2"
+              value={vm.header.selectedMonth}
+              onChange={(e) => onMonthChange(e.target.value)}
+            >
+              {vm.monthlyStats.map((m) => (
+                <option key={m.key} value={m.key}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="h-4 w-px bg-border mx-1 hidden md:block" />
-          <Button
-            variant="outline"
-            className="gap-2 bg-card hover:bg-muted transition-all text-xs font-semibold h-9"
-            onClick={onGoToAnalytics}
-          >
-            <BarChart3 className="size-3.5" />
-            Estadísticas
-          </Button>
-          <Button variant="ghost" className="gap-2 text-xs font-semibold h-9" onClick={onExport}>
-            <Download className="size-3.5" />
-            Exportar
-          </Button>
+          <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              className="flex-1 sm:flex-none gap-2 bg-card hover:bg-muted transition-all text-xs font-semibold h-9"
+              onClick={onGoToAnalytics}
+            >
+              <BarChart3 className="size-3.5" />
+              Estadísticas
+            </Button>
+            <Button variant="ghost" className="flex-1 sm:flex-none gap-2 text-xs font-semibold h-9 bg-card border border-border/40 sm:border-none" onClick={onExport}>
+              <Download className="size-3.5" />
+              Exportar
+            </Button>
+          </div>
         </div>
       </div>
 

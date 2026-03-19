@@ -6,16 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DeleteConfirmDialog } from "../../../shared/ui/DeleteConfirmDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ShoppingCart, Search, TrendingUp, Award, Shield } from "lucide-react";
 import { ClientHistoryDialog } from "./ClientHistoryDialog";
@@ -288,7 +279,7 @@ export function ClientsView({
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Directorio de Clientes</h1>
+          <h1 className="text-3xl text-foreground">Directorio de Clientes</h1>
           <p className="text-sm text-muted-foreground mt-1 font-medium italic opacity-80">
             Base de datos centralizada e inteligencia de consumo.
           </p>
@@ -517,32 +508,21 @@ export function ClientsView({
       </Card>
 
       {/* Delete confirm */}
-      <AlertDialog open={deleteId != null} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar cliente</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. ¿Seguro que querés eliminar este cliente?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                const id = deleteId;
-                setDeleteId(null);
-                try {
-                  await onDelete(id);
-                } catch (e) {
-                  console.error(e);
-                }
-              }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        open={deleteId != null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Eliminar cliente"
+        description="Esta acción no se puede deshacer. ¿Seguro que querés eliminar este cliente?"
+        onConfirm={async () => {
+          const id = deleteId;
+          setDeleteId(null);
+          try {
+            await onDelete(id);
+          } catch (e) {
+            console.error(e);
+          }
+        }}
+      />
 
       {/* Create dialog */}
       <CreateClientDialog

@@ -15,6 +15,7 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
                 .Include(s => s.SaleDetails)
                 .ThenInclude(d => d.ProductVariant)
             .Include(s => s.Client)
+            .AsSplitQuery()
             .ToListAsync();
     }
 
@@ -24,6 +25,7 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
                 .Include(s => s.SaleDetails)
                     .ThenInclude(d => d.ProductVariant)
                 .Include(s => s.Client)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
@@ -33,6 +35,7 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
                 .Include(s => s.SaleDetails)
                     .ThenInclude(d => d.ProductVariant)
                 .Include(s => s.Client)
+                .AsSplitQuery()
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -43,8 +46,6 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
                     s.Id.ToString() == search
                 );
             }
-
-            
 
             if (fromDate.HasValue)
                 query = query.Where(s => s.Date >= fromDate.Value);

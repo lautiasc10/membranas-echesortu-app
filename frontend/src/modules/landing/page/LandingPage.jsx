@@ -144,15 +144,12 @@ export function LandingPage() {
                             Consultanos por nuestros combos de colocación con material incluido.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <button
-                                onClick={() => {
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    toggleCart();
-                                }}
+                            <Link
+                                to="/ofertas"
                                 className="px-7 py-3 bg-white text-orange-600 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors text-center"
                             >
-                                Solicitar Presupuesto
-                            </button>
+                                Ver Ofertas
+                            </Link>
                         </div>
                     </div>
                     <div className="relative">

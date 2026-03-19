@@ -50,11 +50,11 @@ export function mapVariants(variants = []) {
 
     const stock = toNum(
       v.currentStock ??
-        v.CurrentStock ??
-        v.stock ??
-        v.Stock ??
-        v.availableStock ??
-        v.AvailableStock
+      v.CurrentStock ??
+      v.stock ??
+      v.Stock ??
+      v.availableStock ??
+      v.AvailableStock
     );
 
     // Label: Producto · Variante · Marca
@@ -108,7 +108,7 @@ export function mapSales(sales = []) {
     const id = Number(s.id ?? s.saleId ?? s.Id);
 
     const createdAt =
-      s.createdAt ?? s.created_at ?? s.date ?? s.createdOn ?? s.CreatedAt ?? null;
+      s.createdAt ?? s.created_at ?? s.date ?? s.Date ?? s.createdOn ?? s.CreatedAt ?? null;
 
     const clientId =
       s.clientId ?? s.client_id ?? s.client?.id ?? s.ClientId ?? null;

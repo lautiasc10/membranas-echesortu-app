@@ -73,9 +73,21 @@ export function CartDrawer() {
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         📋 Consulta Expresa
                     </h2>
-                    <button onClick={toggleCart} className="p-2 hover:bg-orange-600 rounded-full transition-colors">
-                        <X className="size-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {items.length > 0 && (
+                            <button
+                                onClick={clearCart}
+                                className="p-2 hover:bg-orange-600 rounded-full transition-colors text-orange-100 hover:text-white flex items-center gap-1 text-xs font-bold cursor-pointer"
+                                title="Vaciar consulta"
+                            >
+                                <Trash2 className="size-4" />
+                                <span className="hidden sm:inline">Vaciar</span>
+                            </button>
+                        )}
+                        <button onClick={toggleCart} className="p-2 hover:bg-orange-600 rounded-full transition-colors cursor-pointer">
+                            <X className="size-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Lista de productos */}
@@ -112,14 +124,14 @@ export function CartDrawer() {
                                             <div className="flex items-center border rounded-lg bg-white overflow-hidden shadow-sm">
                                                 <button
                                                     onClick={() => updateQuantity(item.id, -1)}
-                                                    className="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors"
+                                                    className="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer"
                                                 >
                                                     <Minus className="size-3" />
                                                 </button>
                                                 <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(item.id, 1)}
-                                                    className="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors"
+                                                    className="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer"
                                                 >
                                                     <Plus className="size-3" />
                                                 </button>
@@ -131,7 +143,7 @@ export function CartDrawer() {
                                     </div>
                                     <button
                                         onClick={() => removeFromCart(item.id)}
-                                        className="text-gray-400 hover:text-red-500 transition-colors self-start p-1"
+                                        className="text-gray-400 hover:text-red-500 transition-colors self-start p-1 cursor-pointer"
                                     >
                                         <Trash2 className="size-5" />
                                     </button>
@@ -167,7 +179,7 @@ export function CartDrawer() {
                         </div>
 
                         <Button
-                            className="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white py-6 text-lg shadow-lg shadow-green-500/30 gap-2 mt-2"
+                            className="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white py-6 text-lg shadow-lg shadow-green-500/30 gap-2 mt-2 cursor-pointer"
                             onClick={handleWhatsApp}
                         >
                             <MessageCircle className="size-5" />

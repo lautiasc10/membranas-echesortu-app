@@ -8,6 +8,7 @@ namespace Web.Controllers;
 
 [Route("api/categories")]
 [ApiController]
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
@@ -16,7 +17,7 @@ public class CategoryController : ControllerBase
     {
         _categoryService = categoryService;
     }
-
+    [HttpGet]
     public async Task<ActionResult<List<CategoryDto>>> GetAll()
     {
         return Ok(await _categoryService.GetAllCategoriesAsync());

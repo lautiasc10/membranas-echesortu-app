@@ -8,6 +8,7 @@ using Web.Services;
 
 [Route("api/products")]
 [ApiController]
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class ProductController : ControllerBase
 {
     private readonly IProductService _productService;

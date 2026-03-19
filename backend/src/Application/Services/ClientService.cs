@@ -42,6 +42,10 @@ public class ClientService : IClientService
         if (await _clientRepository.GetByEmailAsync(request.Email) != null)
             throw new AppValidationException("EMAIL_ALREADY_EXISTS");
 
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && 
+            await _clientRepository.GetByPhoneNumberAsync(request.PhoneNumber) != null)
+            throw new AppValidationException("PHONE_NUMBER_ALREADY_EXISTS");
+
         var hashed = _hasher.HashPassword(request.Password);
         var client = Client.CreateRegistered(request.Name, request.PhoneNumber, request.Email, hashed);
 
@@ -96,6 +100,13 @@ public class ClientService : IClientService
             var existing = await _clientRepository.GetByEmailAsync(request.Email);
             if (existing != null && existing.Id != id)
                 throw new AppValidationException("EMAIL_ALREADY_EXISTS");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            var existing = await _clientRepository.GetByPhoneNumberAsync(request.PhoneNumber);
+            if (existing != null && existing.Id != id)
+                throw new AppValidationException("PHONE_NUMBER_ALREADY_EXISTS");
         }
 
         if (!string.IsNullOrWhiteSpace(request.Name))

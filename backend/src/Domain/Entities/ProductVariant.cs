@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Domain.Entities
 {
     public class ProductVariant
@@ -18,6 +20,9 @@ namespace Domain.Entities
         public int? MinimumStock { get; set; }
 
         public string? ImageUrl { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = null!;
 
         public List<SaleDetail> SaleDetails { get; set; } = new();
 

@@ -7,6 +7,7 @@ using Application.Models.Requests;
 [Route("api/clients")]
 [ApiController]
 [Authorize(Roles = "admin,superadmin")]  // Solo el admin puede gestionar clientes
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class ClientController : ControllerBase
 {
     private readonly IClientService _clientService;
@@ -15,7 +16,7 @@ public class ClientController : ControllerBase
     {
         _clientService = clientService;
     }
-
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<ClientDto>>> GetAllClients()
     {
         return Ok(await _clientService.GetAllClientsAsync());

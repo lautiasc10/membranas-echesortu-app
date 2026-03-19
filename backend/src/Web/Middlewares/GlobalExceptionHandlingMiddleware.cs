@@ -25,7 +25,7 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
 
             int statusCode = (int)HttpStatusCode.BadRequest;
 
-            var response = new { message = ex.Message };
+            var response = new { message = ex.Message, traceId = context.TraceIdentifier };
             string json = JsonSerializer.Serialize(response);
 
             context.Response.StatusCode = statusCode;
@@ -39,7 +39,7 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
 
             int statusCode = (int)HttpStatusCode.BadRequest;
 
-            var response = new { message = ex.Message };
+            var response = new { message = ex.Message, traceId = context.TraceIdentifier };
             string json = JsonSerializer.Serialize(response);
 
             context.Response.StatusCode = statusCode;
@@ -58,7 +58,8 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
                 Status = statusCode,
                 Type = "https://membranas-echesortu/errors/not-found",
                 Title = "NotFoundException",
-                Detail = ex.Message
+                Detail = ex.Message,
+                Extensions = { ["traceId"] = context.TraceIdentifier }
             };
 
             string json = JsonSerializer.Serialize(problem);
@@ -74,7 +75,21 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
 
             int statusCode = (int)HttpStatusCode.Unauthorized;
 
-            var response = new { message = ex.Message };
+            var response = new { message = ex.Message, traceId = context.TraceIdentifier };
+            string json = JsonSerializer.Serialize(response);
+
+            context.Response.StatusCode = statusCode;
+            context.Response.ContentType = "application/json";
+
+            await context.Response.WriteAsync(json);
+        }
+        catch (ConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, ex.Message);
+
+            int statusCode = (int)HttpStatusCode.Conflict;
+
+            var response = new { message = ex.Message, traceId = context.TraceIdentifier, code = "CONCURRENCY_CONFLICT" };
             string json = JsonSerializer.Serialize(response);
 
             context.Response.StatusCode = statusCode;
@@ -95,7 +110,8 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
                 Status = statusCode,
                 Type = "https://membranas-echesortu/errors/internal-server-error",
                 Title = "Server error",
-                Detail = "An internal server error has occurred."
+                Detail = "An internal server error has occurred.",
+                Extensions = { ["traceId"] = context.TraceIdentifier }
             };
 
             string json = JsonSerializer.Serialize(problem);

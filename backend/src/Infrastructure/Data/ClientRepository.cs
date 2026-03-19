@@ -15,6 +15,11 @@ namespace Infrastructure.Data
             return await _dbSet.FirstOrDefaultAsync(c => c.Email == email);
         }
 
+        public async Task<Client?> GetByPhoneNumberAsync(string phoneNumber)
+        {
+            return await _dbSet.FirstOrDefaultAsync(c => c.PhoneNumber == phoneNumber);
+        }
+
         public override async Task<IEnumerable<Client>> ListAsync()
         {
             return await _dbSet.Include(c => c.Sales).ToListAsync();

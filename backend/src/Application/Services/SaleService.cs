@@ -44,22 +44,7 @@ public class SaleService : ISaleService
 
     public async Task<SaleDto> CreateSaleAsync(SaleRequest request)
     {
-        if (request.Details == null || request.Details.Count == 0)
-            throw new AppValidationException("SALE_DETAILS_REQUIRED");
-
-        int clientId;
-
-        if (request.ClientId.HasValue)
-        {
-            var client = await _clientRepository.GetByIdAsync(request.ClientId.Value)
-                ?? throw new NotFoundException("CLIENT_NOT_FOUND");
-
-            clientId = client.Id;
-        }
-        else
-        {
-            clientId = (await GetOrCreateWalkInClientAsync()).Id;
-        }
+        var clientId = await ResolveClientIdAsync(request.ClientId);
 
         var sale = new Sale
         {
@@ -68,36 +53,7 @@ public class SaleService : ISaleService
             SaleDetails = new List<SaleDetail>()
         };
 
-        foreach (var d in request.Details)
-        {
-            if (d.Quantity <= 0)
-                throw new AppValidationException("INVALID_QUANTITY");
-
-            var variant = await _variantRepository.GetByIdAsync(d.ProductVariantId)
-                ?? throw new NotFoundException("VARIANT_NOT_FOUND");
-
-            if (variant.CurrentStock.HasValue)
-            {
-                if (variant.CurrentStock.Value < d.Quantity)
-                    throw new AppValidationException("INSUFFICIENT_STOCK");
-                
-                variant.CurrentStock -= d.Quantity;
-                _variantRepository.Update(variant);
-            }
-
-            var detail = new SaleDetail
-            {
-                ProductVariantId = d.ProductVariantId,
-                Quantity = d.Quantity,
-                UnitPrice = variant.SalePrice,
-                UnitCost = variant.PurchasePrice,
-            };
-
-            detail.Recalculate();
-            sale.SaleDetails.Add(detail);
-        }
-
-        sale.Total = sale.SaleDetails.Sum(x => x.Subtotal);
+        await ProcessSaleDetailsAsync(sale, request.Details);
 
         _saleRepository.Add(sale);
         await _unitOfWork.SaveChangesAsync();
@@ -113,26 +69,11 @@ public class SaleService : ISaleService
         var sale = await _saleRepository.GetByIdAsync(id)
             ?? throw new NotFoundException("SALE_NOT_FOUND");
 
-        if (request.Details == null || request.Details.Count == 0)
-            throw new AppValidationException("SALE_DETAILS_REQUIRED");
-
-        int clientId;
-        if (request.ClientId.HasValue)
-        {
-            var client = await _clientRepository.GetByIdAsync(request.ClientId.Value)
-                ?? throw new NotFoundException("CLIENT_NOT_FOUND");
-
-            clientId = client.Id;
-        }
-        else
-        {
-            clientId = (await GetOrCreateWalkInClientAsync()).Id;
-        }
-
+        var clientId = await ResolveClientIdAsync(request.ClientId);
         sale.ClientId = clientId;
 
-        sale.SaleDetails ??= new List<SaleDetail>();
         // Restore old stock before clearing details
+        sale.SaleDetails ??= new List<SaleDetail>();
         foreach (var oldDetail in sale.SaleDetails.ToList())
         {
             var oldVariant = await _variantRepository.GetByIdAsync(oldDetail.ProductVariantId);
@@ -144,37 +85,7 @@ public class SaleService : ISaleService
         }
 
         sale.SaleDetails.Clear();
-
-        foreach (var d in request.Details)
-        {
-            if (d.Quantity <= 0)
-                throw new AppValidationException("INVALID_QUANTITY");
-
-            var variant = await _variantRepository.GetByIdAsync(d.ProductVariantId)
-                ?? throw new NotFoundException("VARIANT_NOT_FOUND");
-
-            if (variant.CurrentStock.HasValue)
-            {
-                if (variant.CurrentStock.Value < d.Quantity)
-                    throw new AppValidationException("INSUFFICIENT_STOCK");
-                
-                variant.CurrentStock -= d.Quantity;
-                _variantRepository.Update(variant);
-            }
-
-            var detail = new SaleDetail
-            {
-                ProductVariantId = d.ProductVariantId,
-                Quantity = d.Quantity,
-                UnitPrice = variant.SalePrice,
-                UnitCost = variant.PurchasePrice,
-            };
-
-            detail.Recalculate();
-            sale.SaleDetails.Add(detail);
-        }
-
-        sale.Total = sale.SaleDetails.Sum(x => x.Subtotal);
+        await ProcessSaleDetailsAsync(sale, request.Details);
 
         _saleRepository.Update(sale);
         await _unitOfWork.SaveChangesAsync();
@@ -192,6 +103,55 @@ public class SaleService : ISaleService
 
         _saleRepository.Delete(sale);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task<int> ResolveClientIdAsync(int? requestClientId)
+    {
+        if (requestClientId.HasValue)
+        {
+            var client = await _clientRepository.GetByIdAsync(requestClientId.Value)
+                ?? throw new NotFoundException("CLIENT_NOT_FOUND");
+            return client.Id;
+        }
+
+        return (await GetOrCreateWalkInClientAsync()).Id;
+    }
+
+    private async Task ProcessSaleDetailsAsync(Sale sale, List<SaleDetailRequest> details)
+    {
+        if (details == null || details.Count == 0)
+            throw new AppValidationException("SALE_DETAILS_REQUIRED");
+
+        foreach (var d in details)
+        {
+            if (d.Quantity <= 0)
+                throw new AppValidationException("INVALID_QUANTITY");
+
+            var variant = await _variantRepository.GetByIdAsync(d.ProductVariantId)
+                ?? throw new NotFoundException("VARIANT_NOT_FOUND");
+
+            if (variant.CurrentStock.HasValue)
+            {
+                if (variant.CurrentStock.Value < d.Quantity)
+                    throw new AppValidationException("INSUFFICIENT_STOCK");
+                
+                variant.CurrentStock -= d.Quantity;
+                _variantRepository.Update(variant);
+            }
+
+            var detail = new SaleDetail
+            {
+                ProductVariantId = d.ProductVariantId,
+                Quantity = d.Quantity,
+                UnitPrice = variant.SalePrice,
+                UnitCost = variant.PurchasePrice,
+            };
+
+            detail.Recalculate();
+            sale.SaleDetails.Add(detail);
+        }
+
+        sale.Total = sale.SaleDetails.Sum(x => x.Subtotal);
     }
 
     private async Task<Client> GetOrCreateWalkInClientAsync()

@@ -3,11 +3,14 @@ import logoMembrana from "../../../img/logo-membrana.png";
 export function LandingFooter() {
     return (
         <footer className="bg-[#151515] text-white py-20 px-6 md:px-10">
-            <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-20 border-b border-white/10 pb-16 mb-10">
+            <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-20 border-b border-white/10 pb-16 mb-10">
                 <div>
                     <div className="flex items-center gap-3 mb-6">
                         <img src={logoMembrana} alt="Logo" className="h-8 w-8 object-contain" />
-                        <span className="text-xl font-black">MEMBRANAS</span>
+                        <span className="text-xl font-bold tracking-tight">
+                            <span className="text-white">MEMBRANAS</span>{" "}
+                            <span className="text-orange-500">ECHESORTU</span>
+                        </span>
                     </div>
                     <p className="text-gray-500 text-sm max-w-xs mb-6">
                         Especialistas en impermeabilización y protección de ambientes contra la humedad y filtraciones.
@@ -37,19 +40,9 @@ export function LandingFooter() {
                 <div>
                     <h4 className="font-bold mb-6 text-base">Enlaces Rápidos</h4>
                     <ul className="space-y-3">
-                        <li><a href="/" className="text-gray-400 text-sm hover:text-white transition-colors">Home</a></li>
+                        <li><a href="/#inicio" className="text-gray-400 text-sm hover:text-white transition-colors">Inicio</a></li>
                         <li><a href="/catalogo" className="text-gray-400 text-sm hover:text-white transition-colors">Catálogo de Productos</a></li>
-                        <li><a href="/#ofertas" className="text-gray-400 text-sm hover:text-white transition-colors">Ofertas</a></li>
-                        <li><a href="/#contacto" className="text-gray-400 text-sm hover:text-white transition-colors">Solicitar Cotización</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 className="font-bold mb-6 text-base">Productos Destacados</h4>
-                    <ul className="space-y-3">
-                        <li><a href="/catalogo" className="text-gray-400 text-sm hover:text-white transition-colors">Membranas Asfálticas</a></li>
-                        <li><a href="/catalogo" className="text-gray-400 text-sm hover:text-white transition-colors">Impermeabilizantes Líquidos</a></li>
-                        <li><a href="/catalogo" className="text-gray-400 text-sm hover:text-white transition-colors">Geotextiles</a></li>
-                        <li><a href="/catalogo" className="text-gray-400 text-sm hover:text-white transition-colors">Pinturas Especiales</a></li>
+                        <li><a href="/ofertas" className="text-gray-400 text-sm hover:text-white transition-colors">Ofertas</a></li>
                     </ul>
                 </div>
                 <div>
@@ -68,26 +61,10 @@ export function LandingFooter() {
                             <a href="https://www.facebook.com/membranasechesortu" target="_blank" rel="noopener noreferrer" className="text-gray-400 text-sm hover:text-white transition-colors">/membranasechesortu</a>
                         </li>
                     </ul>
-                    <h4 className="font-bold mb-3 text-sm">Recibir Información</h4>
-                    <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
-                        <input
-                            type="email"
-                            placeholder="Tu Email"
-                            className="bg-transparent border-none p-2 text-sm w-full outline-none text-white placeholder-gray-500"
-                        />
-                        <button className="bg-orange-500 text-white p-2 px-4 rounded-md font-bold text-xs hover:bg-orange-600 transition-colors shrink-0">
-                            →
-                        </button>
-                    </div>
                 </div>
             </div>
             <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-600 uppercase tracking-widest gap-4">
                 <p>© 2026 MEMBRANAS ECHESORTU. TODOS LOS DERECHOS RESERVADOS.</p>
-                <div className="flex gap-6">
-                    <a href="#" className="hover:text-gray-400 transition-colors">Privacidad</a>
-                    <a href="#" className="hover:text-gray-400 transition-colors">Términos</a>
-                    <a href="#" className="hover:text-gray-400 transition-colors">Cookies</a>
-                </div>
             </div>
         </footer>
     );

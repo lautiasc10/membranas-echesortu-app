@@ -1,0 +1,28 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos están actualizados para la restauración.
+  Domain -> d:\Membranas-Echesortu\backend\src\Domain\bin\Debug\net8.0\Domain.dll
+  Application -> d:\Membranas-Echesortu\backend\src\Application\bin\Debug\net8.0\Application.dll
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\BrandRepository.cs(20,42): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ClientRepository.cs(47,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(51,61): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(64,41): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(88,44): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(89,44): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+  Infrastructure -> D:\Membranas-Echesortu\backend\src\Infrastructure\bin\Debug\net8.0\Infrastructure.dll
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(151,13): error CS1061: "RateLimiterOptions" no contiene una definición para "AddFixedWindowLimiter" ni un método de extensión accesible "AddFixedWindowLimiter" que acepte un primer argumento del tipo "RateLimiterOptions" (¿falta alguna directiva using o una referencia de ensamblado?) [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(159,13): error CS1061: "RateLimiterOptions" no contiene una definición para "AddFixedWindowLimiter" ni un método de extensión accesible "AddFixedWindowLimiter" que acepte un primer argumento del tipo "RateLimiterOptions" (¿falta alguna directiva using o una referencia de ensamblado?) [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+
+ERROR al compilar.
+
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\BrandRepository.cs(20,42): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ClientRepository.cs(47,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(51,61): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(64,41): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(88,44): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Infrastructure\Data\ProductRepository.cs(89,44): warning CS8602: Desreferencia de una referencia posiblemente NULL. [d:\Membranas-Echesortu\backend\src\Infrastructure\Infrastructure.csproj]
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(151,13): error CS1061: "RateLimiterOptions" no contiene una definición para "AddFixedWindowLimiter" ni un método de extensión accesible "AddFixedWindowLimiter" que acepte un primer argumento del tipo "RateLimiterOptions" (¿falta alguna directiva using o una referencia de ensamblado?) [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(159,13): error CS1061: "RateLimiterOptions" no contiene una definición para "AddFixedWindowLimiter" ni un método de extensión accesible "AddFixedWindowLimiter" que acepte un primer argumento del tipo "RateLimiterOptions" (¿falta alguna directiva using o una referencia de ensamblado?) [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+    6 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:02.16

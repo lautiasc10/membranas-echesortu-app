@@ -1,40 +1,35 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { InventoryView } from "../ui/InventoryView";
 
 import { ProductDialog } from "../ui/ProductDialog";
 import { VariantDialog } from "../ui/VariantDialog";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { DeleteConfirmDialog } from "../../../shared/ui/DeleteConfirmDialog";
 
 import { getPagedProducts, getProductById, deleteProduct } from "../../../services/products.api";
 import { brandsApi } from "../../../services/brands.api";
 import { categoriesApi } from "../../../services/categories.api";
 import { useInventoryCrud } from "../hooks/useInventoryCrud";
+import { useInventoryFilters } from "../hooks/useInventoryFilters";
+import { useInventoryDialogs } from "../hooks/useInventoryDialogs";
 
 const PAGE_SIZE_PRODUCTS = 8;
 
 export default function InventoryPage() {
   const queryClient = useQueryClient();
 
-  // Filters from UI
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [brand, setBrand] = useState("all");
-  const [category, setCategory] = useState("all");
-  const [sort, setSort] = useState("priority");
+  const {
+    page, setPage, search, setSearch, brand, setBrand,
+    category, setCategory, sort, setSort, clearFilters, handleFilterChange
+  } = useInventoryFilters();
 
-  // Dialog states
-  const [productDialogOpen, setProductDialogOpen] = useState(false);
-  const [productDialogMode, setProductDialogMode] = useState("create");
-  const [productSelected, setProductSelected] = useState(null);
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deleteSelected, setDeleteSelected] = useState(null);
-
-  const [variantDialogOpen, setVariantDialogOpen] = useState(false);
-  const [variantSelectedId, setVariantSelectedId] = useState(null);
-
-  const [busy, setBusy] = useState(false);
+  const {
+    productDialogOpen, setProductDialogOpen, productDialogMode, setProductDialogMode,
+    productSelected, setProductSelected, confirmOpen, setConfirmOpen,
+    deleteSelected, setDeleteSelected, variantDialogOpen, setVariantDialogOpen,
+    variantSelectedId, setVariantSelectedId, busy, setBusy
+  } = useInventoryDialogs();
 
   // Queries
   const { data: brandsRaw = [] } = useQuery({
@@ -130,20 +125,6 @@ export default function InventoryPage() {
   const errorMsg = isError ? (fetchError?.message ?? "Error cargando inventario") : null;
 
   // Handlers
-  function clearFilters() {
-    setSearch("");
-    setBrand("all");
-    setCategory("all");
-    setSort("priority");
-    setPage(1);
-  }
-
-  function handleFilterChange(setter) {
-    return (val) => {
-      setter(val);
-      setPage(1);
-    };
-  }
 
   function handleAddProduct() {
     setProductDialogMode("create");
@@ -181,9 +162,13 @@ export default function InventoryPage() {
     try {
       setBusy(true);
       if (productDialogMode === "create") {
-        return await crud.create(payload);
+        const res = await crud.create(payload);
+        toast.success("Producto creado con éxito");
+        return res;
       }
-      return await crud.update(productSelected?.productId, payload);
+      const res = await crud.update(productSelected?.productId, payload);
+      toast.success("Producto actualizado");
+      return res;
     } finally {
       setBusy(false);
     }
@@ -207,6 +192,7 @@ export default function InventoryPage() {
       await deleteProduct(deleteSelected);
       setConfirmOpen(false);
       setDeleteSelected(null);
+      toast.success("Producto eliminado");
       queryClient.invalidateQueries({ queryKey: ["products"] });
     } finally {
       setBusy(false);
@@ -227,6 +213,7 @@ export default function InventoryPage() {
     try {
       setBusy(true);
       await crud.updateVar(id, payload);
+      toast.success("Variante actualizada");
     } finally {
       setBusy(false);
     }
@@ -237,6 +224,7 @@ export default function InventoryPage() {
     try {
       setBusy(true);
       await brandsApi.create({ name });
+      toast.success(`Marca "${name}" creada`);
       queryClient.invalidateQueries({ queryKey: ["brands"] });
     } finally {
       setBusy(false);
@@ -248,6 +236,7 @@ export default function InventoryPage() {
     try {
       setBusy(true);
       await categoriesApi.create({ name });
+      toast.success(`Categoría "${name}" creada`);
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     } finally {
       setBusy(false);
@@ -315,14 +304,16 @@ export default function InventoryPage() {
         onSubmit={submitVariant}
       />
 
-      <ConfirmDialog
+      <DeleteConfirmDialog
         open={confirmOpen}
         title="Eliminar producto"
         description="¿Seguro querés eliminar este producto? Esta acción no se puede deshacer."
         busy={busy}
-        onClose={() => {
-          setConfirmOpen(false);
-          setDeleteSelected(null);
+        onOpenChange={(v) => {
+          if (!v) {
+            setConfirmOpen(false);
+            setDeleteSelected(null);
+          }
         }}
         onConfirm={confirmDelete}
       />

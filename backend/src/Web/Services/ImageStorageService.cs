@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Application.Interfaces;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 

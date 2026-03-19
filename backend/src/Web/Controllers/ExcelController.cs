@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,superadmin")]  // Solo el admin puede importar Excel
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class ImportController : ControllerBase
 {
     private readonly ExcelImporterService _importer;

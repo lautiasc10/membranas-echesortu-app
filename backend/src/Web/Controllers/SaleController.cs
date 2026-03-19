@@ -9,6 +9,7 @@ namespace Web.Controllers;
 [Route("api/sales")]
 [ApiController]
 [Authorize(Roles = "admin,superadmin")]  // Solo el admin puede gestionar ventas
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class SaleController : ControllerBase
 {
     private readonly ISaleService _saleService;
@@ -17,7 +18,7 @@ public class SaleController : ControllerBase
     {
         _saleService = saleService;
     }
-
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<SaleDto>>> GetAllSales()
     {
         return Ok(await _saleService.GetAllSalesAsync());

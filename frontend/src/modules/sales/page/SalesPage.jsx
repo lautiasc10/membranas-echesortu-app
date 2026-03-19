@@ -29,6 +29,7 @@ import { Plus, Trash2, Pencil, Search, BarChart3, List } from "lucide-react";
 
 import { Pagination } from "../../../shared/ui/Pagination";
 import { SaleCreateView } from "../ui/SaleCreateView";
+import { DeleteConfirmDialog } from "../../../shared/ui/DeleteConfirmDialog";
 
 function currency(n) {
   try {
@@ -67,6 +68,7 @@ export default function SalesPage() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("create"); // "create" | "edit"
   const [editingId, setEditingId] = useState(null);
+  const [saleToDelete, setSaleToDelete] = useState(null);
 
   // form state
   const [clientId, setClientId] = useState(null);
@@ -297,12 +299,15 @@ export default function SalesPage() {
   }
 
   async function onDeleteSale(id) {
-    const ok = confirm(`¿Eliminar la venta #${id}?`);
-    if (!ok) return;
+    setSaleToDelete(id);
+  }
 
+  async function confirmDelete() {
+    if (!saleToDelete) return;
     try {
-      await salesRepository.deleteSale(id);
+      await salesRepository.deleteSale(saleToDelete);
       toast.success("Venta eliminada");
+      setSaleToDelete(null);
       await loadList();
     } catch (e) {
       toast.error(e?.message ?? "No se pudo eliminar");
@@ -322,7 +327,7 @@ export default function SalesPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Ventas</h1>
+          <h1 className="text-3xl text-foreground">Ventas</h1>
           <p className="text-sm text-muted-foreground mt-1 font-medium italic opacity-80">
             Listado, edición y eliminación de ventas del sistema.
           </p>
@@ -460,6 +465,14 @@ export default function SalesPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={saleToDelete != null}
+        onOpenChange={(v) => !v && setSaleToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Eliminar venta"
+        description="¿Seguro querés eliminar esta venta? Esta acción no se puede deshacer."
+      />
     </div >
   );
 }

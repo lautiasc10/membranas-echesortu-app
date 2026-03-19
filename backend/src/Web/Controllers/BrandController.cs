@@ -8,6 +8,7 @@ namespace Web.Controllers;
 
 [Route("api/brands")]
 [ApiController]
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class BrandController : ControllerBase
 {
     private readonly IBrandService _brandService;
@@ -16,7 +17,7 @@ public class BrandController : ControllerBase
     {
         _brandService = brandService;
     }
-
+    [HttpGet]
     public async Task<ActionResult<List<BrandDto>>> GetAll()
     {
         return Ok(await _brandService.GetAllBrandsAsync());

@@ -4,6 +4,7 @@ import { PublicLayout } from "../layouts/PublicLayout/PublicLayout";
 import { ErrorPage } from "../shared/ui/ErrorPage";
 
 import { DashboardPage } from "../modules/dashboard/page/DashboardPage";
+import { DashboardPrintPage } from "../modules/dashboard/page/DashboardPrintPage";
 import { ClientsPage } from "../modules/clients/page/ClientsPage";
 import InventoryPage from "../modules/inventory/page/InventoryPage";
 import SalesPage from "../modules/sales/page/SalesPage";
@@ -16,6 +17,8 @@ import { LoginPage } from "../modules/auth/page/LoginPage";
 import { RegisterPage } from "../modules/auth/page/RegisterPage";
 import { OffersPage } from "../modules/offers/page/OffersPage";
 import { QuotesPage } from "../modules/quotes/page/QuotesPage";
+import { AdminGalleryPage } from "../modules/gallery/page/AdminGalleryPage";
+import { AdminOffersPage } from "../modules/offers/page/AdminOffersPage";
 import { RequireAuth } from "../shared/context/RequireAuth";
 import { RequireAdmin } from "../shared/context/RequireAdmin";
 
@@ -42,6 +45,11 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
+    path: "/admin/dashboard/print",
+    element: <RequireAdmin><DashboardPrintPage /></RequireAdmin>,
+    errorElement: <ErrorPage />,
+  },
+  {
     path: "/admin/quotes/:id/print",
     element: <RequireAdmin><QuotePrintPage /></RequireAdmin>,
     errorElement: <ErrorPage />,
@@ -56,6 +64,8 @@ export const router = createBrowserRouter([
       { path: "inventory", element: <InventoryPage /> },
       { path: "sales", element: <SalesPage /> },
       { path: "quotes", element: <QuotesPage /> },
+      { path: "gallery", element: <AdminGalleryPage /> },
+      { path: "offers", element: <AdminOffersPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],
   },

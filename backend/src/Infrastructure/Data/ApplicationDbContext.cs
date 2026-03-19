@@ -14,6 +14,8 @@ namespace Infrastructure.Data
         public DbSet<SaleDetail> SaleDetails { get; set; }
         public DbSet<Quote> Quotes { get; set; }
         public DbSet<QuoteDetail> QuoteDetails { get; set; }
+        public DbSet<GalleryProject> GalleryProjects { get; set; }
+        public DbSet<Offer> Offers { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
@@ -35,6 +37,10 @@ namespace Infrastructure.Data
                 entity.HasIndex(c => c.Email)
                     .IsUnique()
                     .HasFilter("[Email] IS NOT NULL");
+
+                entity.HasIndex(c => c.PhoneNumber)
+                    .IsUnique()
+                    .HasFilter("[PhoneNumber] IS NOT NULL");
 
                 entity.HasMany(c => c.Sales)
                     .WithOne(s => s.Client!)
@@ -134,6 +140,35 @@ namespace Infrastructure.Data
                 entity.Property(qd => qd.UnitPrice).HasPrecision(18, 2);
                 entity.Property(qd => qd.Subtotal).HasPrecision(18, 2);
                 entity.Property(qd => qd.ProductName).HasMaxLength(300);
+            });
+
+            // ── GalleryProject ──
+            modelBuilder.Entity<GalleryProject>(entity =>
+            {
+                entity.Property(g => g.Title).HasMaxLength(150).IsRequired();
+                entity.Property(g => g.Description).HasMaxLength(1000);
+                entity.Property(g => g.BeforeImageUrl).HasMaxLength(500);
+                entity.Property(g => g.AfterImageUrl).HasMaxLength(500);
+            });
+
+            // ── Offer ──
+            modelBuilder.Entity<Offer>(entity =>
+            {
+                entity.Property(o => o.Title).HasMaxLength(150).IsRequired();
+                entity.Property(o => o.Description).HasMaxLength(1000);
+                entity.Property(o => o.CustomImageUrl).HasMaxLength(500);
+                entity.Property(o => o.DiscountPercentage).HasPrecision(5, 2);
+                entity.Property(o => o.PromoPrice).HasPrecision(18, 2);
+
+                entity.HasOne(o => o.Product)
+                    .WithMany(p => p.Offers)
+                    .HasForeignKey(o => o.ProductId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(o => o.ProductVariant)
+                    .WithMany()
+                    .HasForeignKey(o => o.ProductVariantId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
         }
     }

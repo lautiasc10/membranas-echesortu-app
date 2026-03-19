@@ -76,7 +76,7 @@ export function VariantDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : null)}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="w-[95vw] sm:max-w-[520px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Editar variante</DialogTitle>
         </DialogHeader>

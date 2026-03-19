@@ -1,31 +1,39 @@
-# Etapa 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Base de ejecución
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-
-# Copiamos la solución y los proyectos primero para restaurar dependencias
-COPY *.sln .
-COPY src/Domain/*.csproj ./src/Domain/
-COPY src/Application/*.csproj ./src/Application/
-COPY src/Infrastructure/*.csproj ./src/Infrastructure/
-COPY src/Web/*.csproj ./src/Web/
-
-RUN dotnet restore
-
-# Copiamos el resto del código y construimos
-COPY src/ ./src/
-WORKDIR /app/src/Web
-RUN dotnet build -c Release -o /app/build
-RUN dotnet publish -c Release -o /app/publish
-
-# Etapa 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/publish .
-
-# El servidor de Railway usará el puerto provisto por variable de entorno (PORT)
-# ASP.NET usa HTTP_PORTS para configurarlo (la nube de Render/Railway suele pasarlo automático)
-# Garantizamos seguridad base.
-ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 8080
+
+# Compilación y publicación
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copiamos solo los proyectos para optimizar el cacheo en Docker
+COPY ["src/Web/Web.csproj", "src/Web/"]
+COPY ["src/Application/Application.csproj", "src/Application/"]
+COPY ["src/Domain/Domain.csproj", "src/Domain/"]
+COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
+
+# Restauramos dependencias
+RUN dotnet restore "src/Web/Web.csproj"
+
+# Copiamos el resto del código
+COPY . .
+
+WORKDIR "/src/src/Web"
+RUN dotnet build "Web.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime final
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+
+# Prevencion de root execution en contenedores modernos
+USER $APP_UID
+
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 ENTRYPOINT ["dotnet", "Web.dll"]

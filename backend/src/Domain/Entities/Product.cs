@@ -15,7 +15,8 @@ namespace Domain.Entities
         public string? ImageUrl { get; set; }
 
 
-        public List<ProductVariant> ProductVariants { get; set; } = new();
+        public ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
+        public ICollection<Offer> Offers { get; set; } = new List<Offer>();
 
         public Product() { }
 

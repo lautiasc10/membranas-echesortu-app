@@ -26,13 +26,11 @@ export function LoginPage() {
         try {
             setLoading(true);
             const data = await login(form);
-            // El backend devuelve LoginDto record: { "Token", "Name", "Email", "Role" }
+            // El backend devuelve LoginDto record y asienta las cookies
             const userRole = data.Role || data.role;
-            const userToken = data.Token || data.token;
-            const userRefreshToken = data.RefreshToken || data.refreshToken;
             const userName = data.Name || data.name;
 
-            loginStore(userToken, userRefreshToken, { email: form.email, name: userName, role: userRole }, rememberMe);
+            loginStore({ email: form.email, name: userName, role: userRole });
 
             // Si es admin o superadmin, ir al panel de admin
             if (userRole === "admin" || userRole === "superadmin") {

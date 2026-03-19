@@ -2,9 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Application.Interfaces;
 using Application.Models;
 using Application.Models.Requests;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 [Route("api/auth")]
 [ApiController]
+[EnableRateLimiting("AuthLimiter")]
 public class AuthController : ControllerBase
 {
     private readonly IClientService _clientService;
@@ -31,17 +35,38 @@ public class AuthController : ControllerBase
         var refreshToken = _jwtService.GenerateRefreshToken();
         await _clientService.UpdateRefreshTokenAsync(user.Id, refreshToken, DateTime.UtcNow.AddDays(7));
 
-        // 4. Devolver acceso completo
-        var response = new LoginDto(token, refreshToken, user.Name, user.Email ?? "", user.Role);
+        // 4. Configurar opciones de Cookie Segura
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true, // Recordar usar HTTPS en producción
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddMinutes(480) // Expiración del JWT
+        };
 
-        return Ok(response);
+        var refreshCookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(7) // Expiración del RefreshToken
+        };
+
+        // 5. Inyectar tokens en Cookies
+        Response.Cookies.Append("auth_token", token, cookieOptions);
+        Response.Cookies.Append("refresh_token", refreshToken, refreshCookieOptions);
+
+        return Ok(new { user.Name, user.Email, user.Role });
     }
 
     [HttpPost("refresh")]
-    public async Task<ActionResult<LoginDto>> RefreshToken([FromBody] RefreshAuthRequest dto)
+    public async Task<ActionResult> RefreshToken()
     {
-        // 1. Validar el refresh token (tira 401 si no existe o expiró)
-        var user = await _clientService.ValidateRefreshTokenAsync(dto.RefreshToken);
+        // 1. Obtener Refresh Token
+        var refreshToken = Request.Cookies["refresh_token"];
+        if (string.IsNullOrEmpty(refreshToken)) return Unauthorized("Token missing in cookies");
+
+        var user = await _clientService.ValidateRefreshTokenAsync(refreshToken);
 
         // 2. Generar nuevas credenciales (Rotation)
         var newToken = _jwtService.GenerateToken(user);
@@ -49,8 +74,35 @@ public class AuthController : ControllerBase
         
         await _clientService.UpdateRefreshTokenAsync(user.Id, newRefreshToken, DateTime.UtcNow.AddDays(7));
 
-        var response = new LoginDto(newToken, newRefreshToken, user.Name, user.Email ?? "", user.Role);
-        return Ok(response);
+        var cookieOptions = new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTime.UtcNow.AddMinutes(480) };
+        var refreshCookieOptions = new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTime.UtcNow.AddDays(7) };
+
+        Response.Cookies.Append("auth_token", newToken, cookieOptions);
+        Response.Cookies.Append("refresh_token", newRefreshToken, refreshCookieOptions);
+
+        return Ok(new { user.Name, user.Email, user.Role });
+    }
+
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        var cookieOptions = new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTime.UtcNow.AddDays(-1) };
+        Response.Cookies.Append("auth_token", "", cookieOptions);
+        Response.Cookies.Append("refresh_token", "", cookieOptions);
+        return Ok(new { message = "Logged out successfully" });
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult> GetMe()
+    {
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdString, out int userId)) return Unauthorized();
+
+        var user = await _clientService.GetClientByIdAsync(userId);
+        if (user == null) return Unauthorized();
+
+        return Ok(new { user.Id, user.Name, user.Email, user.Role });
     }
 
     [HttpPost("register-client")]

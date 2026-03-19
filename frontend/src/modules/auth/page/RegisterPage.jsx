@@ -30,10 +30,9 @@ export function RegisterPage() {
             setLoading(true);
             await registerClient(form);
             // Auto-login after register
-            const loginData = await login({ email: form.email, password: form.password });
-            const token = loginData.Token || loginData.token;
-            const refreshToken = loginData.RefreshToken || loginData.refreshToken;
-            loginStore(token, refreshToken, { email: form.email, name: form.name }, true);
+            await login({ email: form.email, password: form.password });
+
+            loginStore({ email: form.email, name: form.name });
             navigate("/ofertas");
         } catch (err) {
             const msg = err?.message || "";

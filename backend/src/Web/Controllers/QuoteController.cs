@@ -9,6 +9,7 @@ namespace Web.Controllers;
 [Route("api/quotes")]
 [ApiController]
 [Authorize(Roles = "admin,superadmin")]  // Solo el admin puede gestionar presupuestos
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class QuoteController : ControllerBase
 {
     private readonly IQuoteService _quoteService;

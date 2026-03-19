@@ -8,6 +8,7 @@ namespace Web.Controllers;
 
 [ApiController]
 [Route("api/product-variants")]
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("PublicLimiter")]
 public class ProductVariantController : ControllerBase
 {
     private readonly IProductVariantService _variantService;

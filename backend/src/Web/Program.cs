@@ -1,6 +1,7 @@
 using System.Text;
 using Infrastructure.Data;
 using Infrastructure.Services;
+using Infrastructure.Repositories;
 using Application.Interfaces;
 using Application.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,12 +10,39 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Domain.Interfaces;
 using Web.Middleware;
+using System.Globalization;
 using Web.Services;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Text.Json.Serialization;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Application.Validators;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Host.UseSerilog((context, loggerConfiguration) => 
+{
+    loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+});
+
+// Configure Invariant Culture for all threads
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
+builder.Services.AddMemoryCache();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<SaleRequestValidator>();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:5173"];
 
@@ -65,6 +93,8 @@ builder.Services.AddScoped<IProductImageService, ProductImageService>();
 builder.Services.AddScoped<IImageStorageService, ImageStorageService>();
 builder.Services.AddScoped<IBrandService, BrandService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IGalleryService, GalleryService>();
+builder.Services.AddScoped<IOfferService, OfferService>();
 
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -83,8 +113,17 @@ if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains("Ch
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString)
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+    })
 );
+
+builder.Services.AddHealthChecks()
+    .AddSqlServer(connectionString, name: "Database");
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 
@@ -114,6 +153,14 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            context.Token = context.Request.Cookies["auth_token"];
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -126,19 +173,43 @@ builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<IQuoteRepository, QuoteRepository>();
 builder.Services.AddScoped<IQuoteDetailRepository, QuoteDetailRepository>();
 builder.Services.AddScoped<ISaleDetailRepository, SaleDetailRepository>();
+builder.Services.AddScoped<IGalleryRepository, GalleryRepository>();
+builder.Services.AddScoped<IOfferRepository, OfferRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddScoped<ExcelImporterService>();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("AuthLimiter", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 15;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 2;
+    });
+
+    options.AddFixedWindowLimiter("PublicLimiter", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 60;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 10;
+    });
+});
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.OpenConnection();
-    db.Database.ExecuteSqlRaw("UPDATE Clients SET Role = 'admin' WHERE Email = 'lauti@gmail.com'");
-    db.Database.ExecuteSqlRaw("UPDATE Clients SET Role = 'superadmin' WHERE Email = 'membranasechesortu@gmail.com'");
-    db.Database.CloseConnection();
+    var services = scope.ServiceProvider;
+    var db = services.GetRequiredService<ApplicationDbContext>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    // MIGRATION STRATEGY FOR PRODUCTION: 
+    // Do NOT run Database.MigrateAsync() at startup since it causes race conditions
+    // across horizontal pods. Deploy migrations via CI/CD pipelines (e.g. using bundles).
+    await DbSeeder.SeedRolesAsync(db, logger);
 }
 
 var excelImportEnabled = builder.Configuration.GetValue<bool>("ExcelImport:Enabled");
@@ -169,11 +240,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseSerilogRequestLogging();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+app.UseRateLimiter();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/ready");
+
 app.MapControllers();
 
 app.Run();

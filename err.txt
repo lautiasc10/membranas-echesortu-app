@@ -1,0 +1,10 @@
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(29,58): error CS0103: El nombre 'ReferenceHandler' no existe en el contexto actual [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(30,64): error CS0103: El nombre 'JsonIgnoreCondition' no existe en el contexto actual [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(158,13): error CS1061: "RateLimiterOptions" no contiene una definición para "AddFixedWindowLimiter" ni un método de extensión accesible "AddFixedWindowLimiter" que acepte un primer argumento del tipo "RateLimiterOptions" (¿falta alguna directiva using o una referencia de ensamblado?) [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+d:\Membranas-Echesortu\backend\src\Web\Program.cs(166,13): error CS1061: "RateLimiterOptions" no contiene una definición para "AddFixedWindowLimiter" ni un método de extensión accesible "AddFixedWindowLimiter" que acepte un primer argumento del tipo "RateLimiterOptions" (¿falta alguna directiva using o una referencia de ensamblado?) [d:\Membranas-Echesortu\backend\src\Web\Web.csproj]
+
+ERROR al compilar.
+    0 Advertencia(s)
+    4 Errores
+
+Tiempo transcurrido 00:00:01.34

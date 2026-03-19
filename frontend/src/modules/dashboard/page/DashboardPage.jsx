@@ -11,6 +11,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [view, setView] = useState("main"); // "main" | "analytics"
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -35,7 +36,7 @@ export function DashboardPage() {
     return () => { alive = false; };
   }, []);
 
-  const vm = useMemo(() => mapDashboard(raw, 30), [raw]);
+  const vm = useMemo(() => mapDashboard(raw, selectedMonth), [raw, selectedMonth]);
 
   if (view === "analytics") {
     return <AnalyticsView vm={vm} onBack={() => setView("main")} />;
@@ -47,9 +48,13 @@ export function DashboardPage() {
       error={error}
       vm={vm}
       onGoToAnalytics={() => setView("analytics")}
-      onExport={() => { }}
+      onExport={() => {
+        const month = selectedMonth || (vm?.header?.selectedMonth ?? "");
+        window.open(`/admin/dashboard/print?month=${month}`, "_blank");
+      }}
       onViewInventory={() => navigate("/admin/inventory")}
       onViewSales={() => navigate("/admin/sales")}
+      onMonthChange={setSelectedMonth}
     />
   );
 }

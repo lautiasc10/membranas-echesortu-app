@@ -104,7 +104,7 @@ export function AnalyticsView({ vm, onBack }) {
                         <Activity className="size-3" />
                         Intelligence Panel
                     </div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">Estadísticas Avanzadas</h1>
+                    <h1 className="text-3xl text-foreground">Estadísticas Avanzadas</h1>
                     <p className="text-muted-foreground text-sm max-w-lg">Análisis profundo del rendimiento operativo y comercial.</p>
                 </div>
                 <Button

@@ -4,6 +4,7 @@ using Application.Models.Requests;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Application.Services;
 
@@ -15,6 +16,10 @@ public class ProductService : IProductService
     private readonly ICategoryRepository _categoryRepository;
     private readonly ISaleDetailRepository _saleDetailRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMemoryCache _cache;
+
+    private const string CacheKeyAllProducts = "AllProducts";
+    private const string CacheKeyTopSelling = "TopSelling";
 
     public ProductService(
         IProductRepository productRepository,
@@ -22,7 +27,8 @@ public class ProductService : IProductService
         IBrandRepository brandRepository,
         ICategoryRepository categoryRepository,
         ISaleDetailRepository saleDetailRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMemoryCache cache)
     {
         _productRepository = productRepository;
         _variantRepository = variantRepository;
@@ -30,15 +36,22 @@ public class ProductService : IProductService
         _categoryRepository = categoryRepository;
         _saleDetailRepository = saleDetailRepository;
         _unitOfWork = unitOfWork;
+        _cache = cache;
     }
 
     public async Task<List<ProductDto>> GetAllProductsAsync()
     {
+        if (_cache.TryGetValue(CacheKeyAllProducts, out List<ProductDto>? cachedProducts))
+            return cachedProducts!;
+
         var products = await _productRepository.GetProductsForListAsync();
         if (!products.Any())
             return new List<ProductDto>();
 
-        return ProductDto.CreateList(products);
+        var result = ProductDto.CreateList(products);
+        _cache.Set(CacheKeyAllProducts, result, TimeSpan.FromMinutes(15));
+        
+        return result;
     }
 
     public async Task<ProductDto> GetProductByIdAsync(int id)
@@ -82,6 +95,7 @@ public class ProductService : IProductService
 
         await _unitOfWork.SaveChangesAsync();
         
+        ClearCache();
         return ProductDto.Create(product);
     }
 
@@ -109,6 +123,8 @@ public class ProductService : IProductService
 
         _productRepository.Update(product);
         await _unitOfWork.SaveChangesAsync();
+        
+        ClearCache();
         return ProductDto.Create(product);
     }
 
@@ -119,26 +135,40 @@ public class ProductService : IProductService
 
         _productRepository.Delete(product);
         await _unitOfWork.SaveChangesAsync();
+        ClearCache();
     }
 
     public async Task<List<ProductDto>> GetTopSellingProductsAsync(int count = 6)
     {
+        var cacheKey = $"{CacheKeyTopSelling}_{count}";
+        if (_cache.TryGetValue(cacheKey, out List<ProductDto>? cachedProducts))
+            return cachedProducts!;
+
+        List<ProductDto> result;
         var topProductIds = await _saleDetailRepository.GetTopSellingProductIdsAsync(count);
 
         if (topProductIds.Any())
         {
             var products = await _productRepository.GetByIdsAsync(topProductIds);
 
-            // Maintain the sales-order ranking
             var ordered = topProductIds
-                .Select(id => products.First(p => p.Id == id))
+                .Select(id => products.FirstOrDefault(p => p.Id == id))
+                .Where(p => p != null)
                 .ToList();
 
-            return ProductDto.CreateList(ordered);
+            if (ordered.Any())
+            {
+                result = ProductDto.CreateList(ordered!);
+                _cache.Set(cacheKey, result, TimeSpan.FromHours(1));
+                return result;
+            }
         }
 
         var allProducts = await _productRepository.GetProductsForListAsync();
-        return ProductDto.CreateList(allProducts.Take(count));
+        result = ProductDto.CreateList(allProducts.Take(count));
+        
+        _cache.Set(cacheKey, result, TimeSpan.FromHours(1));
+        return result;
     }
 
     public async Task<PagedResult<ProductWithVariantsDto>> GetPagedProductsAsync(int page, int pageSize, string? search, string? brand, string? category, string? sort)
@@ -152,5 +182,11 @@ public class ProductService : IProductService
             Page = page,
             TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
         };
+    }
+
+    private void ClearCache()
+    {
+        _cache.Remove(CacheKeyAllProducts);
+        _cache.Remove($"{CacheKeyTopSelling}_6"); // Most common usage
     }
 }

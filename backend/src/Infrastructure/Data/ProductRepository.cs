@@ -25,6 +25,7 @@ namespace Infrastructure.Data
                 .Include(p => p.Brand)
                 .Include(p => p.Category)
                 .Include(p => p.ProductVariants)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -43,6 +44,7 @@ namespace Infrastructure.Data
                 .Include(p => p.Brand)
                 .Include(p => p.Category)
                 .Include(p => p.ProductVariants)
+                .AsSplitQuery()
                 .Where(p => p.Active)
                 .AsQueryable();
 

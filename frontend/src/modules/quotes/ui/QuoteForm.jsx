@@ -118,46 +118,76 @@ export function QuoteForm({ quoteId, variants, onSubmit, onCancel }) {
     if (loading) return <div className="p-4 text-center">Cargando...</div>;
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                    <Label>Cliente</Label>
-                    <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Nombre del cliente" />
-                </div>
-                <div className="space-y-1">
-                    <Label>Domicilio</Label>
-                    <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="Ej: San Juan 3451" />
-                </div>
-                <div className="space-y-1">
-                    <Label>Ciudad</Label>
-                    <Input value={clientCity} onChange={(e) => setClientCity(e.target.value)} placeholder="Ej: Rosario - Santa Fe" />
-                </div>
-                <div className="space-y-1">
-                    <Label>Ubicación de la obra</Label>
-                    <Input value={workLocation} onChange={(e) => setWorkLocation(e.target.value)} placeholder="Dirección de la obra" />
+        <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Client Info Section */}
+            <div className="bg-muted/30 p-4 sm:p-6 rounded-2xl border border-border/50">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Información del Cliente</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="space-y-2">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Cliente</Label>
+                        <Input
+                            value={clientName}
+                            onChange={(e) => setClientName(e.target.value)}
+                            placeholder="Nombre completo o empresa"
+                            className="bg-background shadow-none border-border/60 focus:border-primary/50 transition-colors"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Domicilio</Label>
+                        <Input
+                            value={clientAddress}
+                            onChange={(e) => setClientAddress(e.target.value)}
+                            placeholder="Ej: San Juan 3451"
+                            className="bg-background shadow-none border-border/60 focus:border-primary/50 transition-colors"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Ciudad</Label>
+                        <Input
+                            value={clientCity}
+                            onChange={(e) => setClientCity(e.target.value)}
+                            placeholder="Ej: Rosario - Santa Fe"
+                            className="bg-background shadow-none border-border/60 focus:border-primary/50 transition-colors"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Ubicación de la obra</Label>
+                        <Input
+                            value={workLocation}
+                            onChange={(e) => setWorkLocation(e.target.value)}
+                            placeholder="Dirección donde se realiza el trabajo"
+                            className="bg-background shadow-none border-border/60 focus:border-primary/50 transition-colors"
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">Productos</Label>
+            {/* Products Section */}
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="relative w-64">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 bg-primary/10 text-primary rounded-lg ring-1 ring-primary/20">
+                            <Plus className="size-4" />
+                        </div>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Productos y Servicios</h3>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="relative flex-1 sm:w-72">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                             <Input
                                 placeholder="Buscar en inventario..."
-                                className="pl-8"
+                                className="pl-9 bg-muted/20 border-border/40 text-sm h-9 shadow-none focus:bg-background transition-all"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                             {filteredVariants.length > 0 && (
-                                <div className="absolute top-11 left-0 right-0 z-50 bg-popover text-popover-foreground border shadow-md rounded-md">
+                                <div className="absolute top-11 left-0 right-0 z-50 bg-popover text-popover-foreground border border-border shadow-xl rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                     {filteredVariants.map((v) => (
                                         <div
                                             key={v.id}
-                                            className="p-2 text-sm hover:bg-muted cursor-pointer font-medium"
+                                            className="p-3 text-sm hover:bg-muted cursor-pointer font-medium flex items-center justify-between border-b last:border-0 border-border/50"
                                             onClick={() => {
-                                                // If there is an empty row, use it, else add new row
                                                 const emptyIndex = details.findIndex((d) => !d.productName);
                                                 if (emptyIndex !== -1) {
                                                     selectVariant(emptyIndex, v);
@@ -168,98 +198,176 @@ export function QuoteForm({ quoteId, variants, onSubmit, onCancel }) {
                                                 }
                                             }}
                                         >
-                                            {v.productName} {v.color} - {currency(v.salePrice)}
+                                            <span className="truncate mr-2">{v.productName} {v.color}</span>
+                                            <span className="text-xs font-bold bg-primary/5 px-2 py-0.5 rounded text-primary shrink-0">{currency(v.salePrice)}</span>
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
-                        <Button type="button" variant="outline" size="sm" onClick={addDetail}>
-                            <Plus className="size-4 mr-1" />
+                        <Button type="button" variant="outline" size="sm" onClick={addDetail} className="h-9 font-semibold hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all">
+                            <Plus className="size-4 mr-1.5" />
                             Fila Libre
                         </Button>
                     </div>
                 </div>
 
-                <div className="border rounded-md overflow-hidden">
-                    <Table>
-                        <TableHeader className="bg-muted/50">
-                            <TableRow>
-                                <TableHead className="w-[50%]">PRODUCTO</TableHead>
-                                <TableHead className="w-[15%]">CANTIDAD</TableHead>
-                                <TableHead className="w-[20%]">PRECIO UNITARIO</TableHead>
-                                <TableHead className="w-[20%]">PRECIO TOTAL</TableHead>
-                                <TableHead className="w-10"></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {details.map((d, index) => (
-                                <TableRow key={d.id}>
-                                    <TableCell className="p-2">
-                                        <Input
-                                            required
-                                            className="h-8 shadow-none"
-                                            value={d.productName}
-                                            onChange={(e) => updateDetail(index, "productName", e.target.value)}
-                                            placeholder="Descripción del producto"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="p-2">
+                {/* Items List - Mobile Cards / Desktop Table */}
+                <div className="border rounded-2xl overflow-hidden bg-background shadow-sm">
+                    {/* Desktop View */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader className="bg-muted/50 border-b border-border/50">
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="w-[45%] text-[10px] font-bold uppercase tracking-widest py-4">Descripción del Producto</TableHead>
+                                    <TableHead className="w-[15%] text-[10px] font-bold uppercase tracking-widest py-4 text-center">Cant.</TableHead>
+                                    <TableHead className="w-[20%] text-[10px] font-bold uppercase tracking-widest py-4 text-right">Precio Unit.</TableHead>
+                                    <TableHead className="w-[20%] text-[10px] font-bold uppercase tracking-widest py-4 text-right pr-6">Total</TableHead>
+                                    <TableHead className="w-12"></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {details.map((d, index) => (
+                                    <TableRow key={d.id} className="group hover:bg-muted/20 transition-colors">
+                                        <TableCell className="p-3">
+                                            <Input
+                                                required
+                                                className="h-10 shadow-none border-transparent focus:border-border/50 group-hover:bg-background transition-colors font-medium"
+                                                value={d.productName}
+                                                onChange={(e) => updateDetail(index, "productName", e.target.value)}
+                                                placeholder="Ej: Membrana Asfáltica 4mm"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="p-3">
+                                            <Input
+                                                type="number"
+                                                required
+                                                min={1}
+                                                className="h-10 shadow-none border-transparent focus:border-border/50 group-hover:bg-background transition-colors text-center font-semibold"
+                                                value={d.quantity}
+                                                onChange={(e) => updateDetail(index, "quantity", Number(e.target.value))}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="p-3">
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                                                <Input
+                                                    type="number"
+                                                    required
+                                                    min={0}
+                                                    step="0.01"
+                                                    className="h-10 pl-6 shadow-none border-transparent focus:border-border/50 group-hover:bg-background transition-colors text-right font-semibold"
+                                                    value={d.unitPrice}
+                                                    onChange={(e) => updateDetail(index, "unitPrice", Number(e.target.value))}
+                                                />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="p-3 text-right font-bold text-primary pr-6">
+                                            {currency((d.quantity || 0) * (d.unitPrice || 0))}
+                                        </TableCell>
+                                        <TableCell className="p-3 text-center">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
+                                                onClick={() => removeDetail(index)}
+                                            >
+                                                <Trash2 className="size-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Mobile View - Cards */}
+                    <div className="md:hidden divide-y divide-border/50">
+                        {details.map((d, index) => (
+                            <div key={d.id} className="p-4 space-y-4 bg-muted/5 relative group">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-2 top-2 size-8 text-muted-foreground/50 hover:text-destructive"
+                                    onClick={() => removeDetail(index)}
+                                >
+                                    <Trash2 className="size-4" />
+                                </Button>
+
+                                <div className="space-y-1 pr-8">
+                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Producto</Label>
+                                    <Input
+                                        required
+                                        className="shadow-none border-border/40 h-10 bg-background font-medium"
+                                        value={d.productName}
+                                        onChange={(e) => updateDetail(index, "productName", e.target.value)}
+                                        placeholder="Descripción"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cant.</Label>
                                         <Input
                                             type="number"
                                             required
                                             min={1}
-                                            className="h-8 shadow-none text-right"
+                                            className="shadow-none h-10 border-border/40 bg-background text-center font-bold"
                                             value={d.quantity}
-                                            onChange={(e) => updateDetail(index, "quantity", e.target.value)}
+                                            onChange={(e) => updateDetail(index, "quantity", Number(e.target.value))}
                                         />
-                                    </TableCell>
-                                    <TableCell className="p-2">
-                                        <Input
-                                            type="number"
-                                            required
-                                            min={0}
-                                            step="0.01"
-                                            className="h-8 shadow-none text-right"
-                                            value={d.unitPrice}
-                                            onChange={(e) => updateDetail(index, "unitPrice", e.target.value)}
-                                        />
-                                    </TableCell>
-                                    <TableCell className="p-2 text-right font-medium">
-                                        {currency((d.quantity || 0) * (d.unitPrice || 0))}
-                                    </TableCell>
-                                    <TableCell className="p-2 text-center">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="size-8 text-muted-foreground hover:text-destructive"
-                                            onClick={() => removeDetail(index)}
-                                        >
-                                            <Trash2 className="size-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            <TableRow className="bg-muted/30 hover:bg-muted/30">
-                                <TableCell colSpan={3} className="text-right font-bold py-3 text-lg">
-                                    TOTAL
-                                </TableCell>
-                                <TableCell className="text-right font-bold py-3 text-lg text-primary">
-                                    {currency(total)}
-                                </TableCell>
-                                <TableCell></TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Precio Unit.</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                                            <Input
+                                                type="number"
+                                                required
+                                                min={0}
+                                                step="0.01"
+                                                className="shadow-none h-10 pl-6 border-border/40 bg-background text-right font-bold"
+                                                value={d.unitPrice}
+                                                onChange={(e) => updateDetail(index, "unitPrice", Number(e.target.value))}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                                    <span className="text-xs font-semibold text-muted-foreground">Total Item</span>
+                                    <span className="text-base font-black text-primary">{currency((d.quantity || 0) * (d.unitPrice || 0))}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Summary Row */}
+                    <div className="bg-primary/5 px-6 py-6 border-t border-primary/10 flex flex-nowrap items-center justify-between">
+                        <div className="hidden sm:block">
+                            <span className="text-xs font-bold uppercase tracking-widest text-primary/60">Total del Presupuesto</span>
+                        </div>
+                        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                            <span className="sm:hidden text-xs font-bold uppercase tracking-widest text-primary/60">TOTAL</span>
+                            <span className="text-3xl font-black text-primary tracking-tighter">
+                                {currency(total)}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                <Button variant="outline" type="button" onClick={onCancel}>
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-6 border-t">
+                <Button variant="ghost" type="button" onClick={onCancel} className="font-semibold text-muted-foreground hover:text-foreground">
                     Cancelar
                 </Button>
-                <Button type="submit">Guardar Presupuesto</Button>
+                <Button type="submit" className="h-11 px-8 font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <Plus className="size-4 mr-2" />
+                    Guardar Presupuesto
+                </Button>
             </div>
         </form>
     );

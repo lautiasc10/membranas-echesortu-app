@@ -1,59 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LandingHeader } from "../../landing/ui/LandingHeader";
 import { LandingFooter } from "../../landing/ui/LandingFooter";
-
-import terrazaAntes from "../../../img/gallery-terraza-antes.png";
-import terrazaDespues from "../../../img/gallery-terraza-despues.png";
-import naveAntes from "../../../img/gallery-nave-antes.png";
-import naveDespues from "../../../img/gallery-nave-despues.png";
-import residenciaAntes from "../../../img/gallery-residencia-antes.png";
-import residenciaDespues from "../../../img/gallery-residencia-despues.png";
-import comercialAntes from "../../../img/gallery-comercial-antes.png";
-import comercialDespues from "../../../img/gallery-comercial-despues.png";
-
-const PROJECTS = [
-    {
-        id: 1,
-        title: "Terraza Central Echesortu",
-        category: "Residencial",
-        description: "Tratamiento integral de filtraciones críticas con remoción de material suelto y aplicación de triple capa de membrana líquida reforzada.",
-        before: terrazaAntes,
-        after: terrazaDespues,
-    },
-    {
-        id: 2,
-        title: "Nave Industrial San Lorenzo",
-        category: "Industrial",
-        description: "Recubrimiento de alta reflectancia térmica en 2500m² de cubiertas metálicas para reducción de temperatura y sellado de tornillería.",
-        before: naveAntes,
-        after: naveDespues,
-    },
-    {
-        id: 3,
-        title: "Residencia Fisherton",
-        category: "Residencial",
-        description: "Tratamiento antihumedad de cimientos y muros exteriores con terminación de pintura elástica de alta densidad.",
-        before: residenciaAntes,
-        after: residenciaDespues,
-    },
-    {
-        id: 4,
-        title: "Centro Comercial Funes",
-        category: "Industrial",
-        description: "Impermeabilización de grandes superficies con membrana asfáltica soldada y terminación de aluminio reflectivo.",
-        before: comercialAntes,
-        after: comercialDespues,
-    },
-];
-
-const TABS = ["Todos los Proyectos", "Residencial", "Industrial"];
+import { galleryRepository } from "../data/gallery.repository";
+import { baseUrl } from "../../../services/apiClient";
+import { LayoutList } from "lucide-react";
 
 export function GalleryPage() {
-    const [activeTab, setActiveTab] = useState("Todos los Proyectos");
+    const [projects, setProjects] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const filtered = activeTab === "Todos los Proyectos"
-        ? PROJECTS
-        : PROJECTS.filter((p) => p.category === activeTab);
+    useEffect(() => {
+        galleryRepository.listPaged({ page: 1, pageSize: 50, onlyVisible: true })
+            .then(res => {
+                // Ordenar por OrderIndex
+                const sorted = (res.data || []).sort((a, b) => a.orderIndex - b.orderIndex);
+                setProjects(sorted);
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
+
+    const getImageUrl = (url) => {
+        if (!url) return null;
+        if (url.startsWith("http")) return url;
+        return `${baseUrl}${url}`;
+    };
 
     return (
         <div className="font-[Manrope] text-gray-900 bg-white min-h-screen flex flex-col">
@@ -68,76 +39,87 @@ export function GalleryPage() {
                 </p>
             </section>
 
-            {/* ─── Category Tabs ─── */}
+            {/* ─── Category Tabs (Removed because backend has no Category yet) ─── */}
             <section className="px-6 md:px-10 max-w-[1400px] mx-auto w-full mb-10">
                 <div className="flex gap-1 border-b border-gray-200">
-                    {TABS.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-5 py-3 text-sm font-semibold transition-all relative ${activeTab === tab
-                                ? "text-orange-500"
-                                : "text-gray-400 hover:text-gray-600"
-                                }`}
-                        >
-                            {tab}
-                            {activeTab === tab && (
-                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-orange-500 rounded-t-full" />
-                            )}
-                        </button>
-                    ))}
+                    <button className="px-5 py-3 text-sm font-semibold transition-all relative text-orange-500">
+                        Todos los Proyectos
+                        <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-orange-500 rounded-t-full" />
+                    </button>
                 </div>
             </section>
 
             {/* ─── Projects Grid ─── */}
             <section className="px-6 md:px-10 max-w-[1400px] mx-auto w-full flex-1 mb-16">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {filtered.map((project) => (
-                        <div
-                            key={project.id}
-                            className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group"
-                        >
-                            {/* Before / After Images */}
-                            <div className="grid grid-cols-2 h-56 md:h-72">
-                                <div className="relative overflow-hidden">
-                                    <img
-                                        src={project.before}
-                                        alt={`${project.title} — Antes`}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                    <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-lg">
-                                        Antes
-                                    </span>
-                                </div>
-                                <div className="relative overflow-hidden">
-                                    <img
-                                        src={project.after}
-                                        alt={`${project.title} — Después`}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                    <span className="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-lg">
-                                        Después
-                                    </span>
-                                </div>
-                            </div>
+                {loading ? (
+                    <div className="flex justify-center items-center py-32">
+                        <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                ) : projects.length === 0 ? (
+                    <div className="text-center py-32">
+                        <div className="text-5xl mb-4">📸</div>
+                        <p className="text-gray-400 text-lg">Próximamente estaremos publicando nuestras obras.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {projects.map((project) => {
+                            const before = getImageUrl(project.beforeImageUrl);
+                            const after = getImageUrl(project.afterImageUrl);
+                            // If it only has one image, we can adapt the layout
+                            const hasBoth = before && after;
+                            const hasAny = before || after;
 
-                            {/* Card Info */}
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-lg font-bold">{project.title}</h3>
-                                    <span className="text-[11px] font-bold text-orange-500 uppercase tracking-wider bg-orange-50 px-3 py-1 rounded-full">
-                                        {project.category}
-                                    </span>
+                            return (
+                                <div
+                                    key={project.id}
+                                    className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col"
+                                >
+                                    {/* Before / After Images */}
+                                    <div className={`grid ${hasBoth ? "grid-cols-2" : "grid-cols-1"} h-56 md:h-72 bg-slate-100`}>
+                                        {before && (
+                                            <div className="relative overflow-hidden">
+                                                <img
+                                                    src={before}
+                                                    alt={`${project.title} — Antes`}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                {hasBoth && <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-lg">Antes</span>}
+                                            </div>
+                                        )}
+                                        {after && (
+                                            <div className="relative overflow-hidden">
+                                                <img
+                                                    src={after}
+                                                    alt={`${project.title} — Después`}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                {hasBoth && <span className="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-lg">Después</span>}
+                                            </div>
+                                        )}
+                                        {!hasAny && (
+                                            <div className="flex w-full h-full items-center justify-center text-slate-300">
+                                                <LayoutList className="size-10" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Card Info */}
+                                    <div className="p-6 flex flex-col flex-1">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="text-lg font-bold">{project.title}</h3>
+                                            {project.workDate && (
+                                                <span className="text-[11px] font-bold text-orange-500 uppercase tracking-wider bg-orange-50 px-3 py-1 rounded-full">
+                                                    {new Date(project.workDate).getFullYear()}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-gray-500 mb-5 leading-relaxed flex-1 whitespace-pre-wrap">{project.description}</p>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-gray-500 mb-5 leading-relaxed">{project.description}</p>
-                                <button className="text-sm font-bold text-orange-500 border-2 border-orange-500 rounded-xl px-5 py-2.5 hover:bg-orange-500 hover:text-white transition-all duration-200 flex items-center gap-2">
-                                    Ver Detalles del Proyecto
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            )
+                        })}
+                    </div>
+                )}
             </section>
 
             <LandingFooter />

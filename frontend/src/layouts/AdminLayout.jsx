@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, ScrollRestoration } from "react-router-dom";
 import { Sidebar } from "../shared/ui/Sidebar";
 import { Topbar } from "../shared/ui/Topbar";
-import { BottomNav } from "../shared/ui/BottomNav";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export function AdminLayout() {
@@ -16,6 +15,7 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/10 selection:text-primary">
+      <ScrollRestoration />
       <div className="flex">
         {/* Desktop Sidebar */}
         <Sidebar className="hidden lg:flex" />
@@ -28,7 +28,7 @@ export function AdminLayout() {
           </SheetContent>
         </Sheet>
 
-        <main className="flex-1 min-w-0 pb-20 lg:pb-0">
+        <main className="flex-1 min-w-0">
           <Topbar onMenuClick={() => setIsMobileOpen(true)} />
           <div className="flex-1 p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
             <Outlet />
@@ -44,9 +44,6 @@ export function AdminLayout() {
           </footer>
         </main>
       </div>
-
-      {/* Bottom Navigation for Mobile */}
-      <BottomNav />
     </div>
   );
 }

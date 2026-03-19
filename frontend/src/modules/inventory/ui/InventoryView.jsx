@@ -159,7 +159,7 @@ export function InventoryView({
       {/* Title */}
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Gestión de Inventario</h1>
+          <h1 className="text-3xl text-foreground">Gestión de Inventario</h1>
           <p className="text-sm text-muted-foreground mt-1 font-medium italic opacity-80">
             Administra productos, sus variantes y niveles de stock actualizados.
           </p>

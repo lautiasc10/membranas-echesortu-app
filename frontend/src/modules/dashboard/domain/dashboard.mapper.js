@@ -111,19 +111,71 @@ function getVariantLabel(v) {
   return parts.length ? parts.join(" · ") : null;
 }
 
-export function mapDashboard({ clients, sales, variants }, days = 30) {
+function isSameMonth(date, yearMonth) {
+  if (!date || !yearMonth || typeof yearMonth !== "string") return false;
+  const parts = yearMonth.split("-");
+  if (parts.length < 2) return false;
+  const [y, m] = parts.map(Number);
+  return date.getFullYear() === y && (date.getMonth() + 1) === m;
+}
+
+export function mapDashboard({ clients, sales, variants }, targetMonth = null) {
   const salesWithDate = (sales ?? []).map((s) => ({
     ...s,
     _dateObj: toDate(getSaleDate(s)),
   }));
 
-  const periodSales = salesWithDate.filter((s) => isWithinLastDays(s._dateObj, days));
+  const clientsWithDate = (clients ?? []).map((c) => ({
+    ...c,
+    _registrationDate: toDate(pick(c, "registrationDate", "RegistrationDate")),
+  }));
 
+  // 1. Agrupar por Meses para sacar la lista de disponibles (Históricos)
+  const monthlyGroups = {}; // "YYYY-MM" -> { label, salesCount, revenue, profit, clientCount }
+
+  for (const s of salesWithDate) {
+    if (!s._dateObj) continue;
+    const key = `${s._dateObj.getFullYear()}-${String(s._dateObj.getMonth() + 1).padStart(2, "0")}`;
+    if (!monthlyGroups[key]) {
+      monthlyGroups[key] = {
+        key,
+        label: s._dateObj.toLocaleString("es-AR", { month: "long", year: "numeric" }),
+        salesCount: 0, revenue: 0, profit: 0, clientCount: 0,
+      };
+    }
+    monthlyGroups[key].salesCount += 1;
+    monthlyGroups[key].revenue += getSaleTotal(s);
+    monthlyGroups[key].profit += getSaleProfit(s);
+  }
+
+  for (const c of clientsWithDate) {
+    if (!c._registrationDate || c.isGuest || c.IsGuest) continue;
+    const key = `${c._registrationDate.getFullYear()}-${String(c._registrationDate.getMonth() + 1).padStart(2, "0")}`;
+    if (!monthlyGroups[key]) {
+      monthlyGroups[key] = {
+        key,
+        label: c._registrationDate.toLocaleString("es-AR", { month: "long", year: "numeric" }),
+        salesCount: 0, revenue: 0, profit: 0, clientCount: 0,
+      };
+    }
+    monthlyGroups[key].clientCount += 1;
+  }
+
+  const monthlyStats = Object.values(monthlyGroups).sort((a, b) => b.key.localeCompare(a.key));
+
+  // 2. Determinar Mes Objetivo
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const effectiveMonth = targetMonth || currentMonthKey;
+
+  // 3. Filtrar datos del periodo seleccionado
+  const periodSales = salesWithDate.filter((s) => isSameMonth(s._dateObj, effectiveMonth));
   const periodSalesTotal = sum(periodSales.map(getSaleTotal));
   const periodSalesCount = periodSales.length;
   const periodProfitTotal = sum(periodSales.map(getSaleProfit));
+  const periodNewClients = clientsWithDate.filter(c => !c.isGuest && !c.IsGuest && isSameMonth(c._registrationDate, effectiveMonth)).length;
 
-  // Alertas de stock
+  // Alertas de stock (Estado actual, no depende del mes del reporte)
   const alerts = (variants ?? [])
     .map((v) => {
       const current = getVariantCurrentStock(v) ?? 0;
@@ -141,13 +193,12 @@ export function mapDashboard({ clients, sales, variants }, days = 30) {
       };
     })
     .filter((x) => x.status.level !== "ok")
-    .slice(0, 5); // Aumentamos un poco el límite de alertas visibles
+    .slice(0, 5);
 
-  // Ranking de ventas por variante (periodo)
-  const byVariant = new Map(); // id -> { qty, revenue }
+  // Ranking de ventas por variante (del mes seleccionado)
+  const byVariant = new Map();
   for (const sale of periodSales) {
     const details = getSaleDetails(sale);
-
     for (const d of details) {
       const variantId = Number(pick(d, "productVariantId", "ProductVariantId") ?? 0);
       const qty = Number(pick(d, "quantity", "Quantity") ?? 0);
@@ -162,7 +213,6 @@ export function mapDashboard({ clients, sales, variants }, days = 30) {
   }
 
   const variantsById = new Map((variants ?? []).map((v) => [Number(getVariantId(v)), v]));
-
   const ranking = Array.from(byVariant.entries()).map(([variantId, info]) => {
     const v = variantsById.get(Number(variantId));
     return {
@@ -176,11 +226,10 @@ export function mapDashboard({ clients, sales, variants }, days = 30) {
   });
 
   ranking.sort((a, b) => b.qty - a.qty);
-
   const top = ranking[0] ?? null;
   const low = ranking.length ? ranking[ranking.length - 1] : null;
 
-  // Últimas ventas
+  // Últimas ventas (Globales, para el dashboard principal)
   const recentSales = [...salesWithDate]
     .filter((s) => s._dateObj)
     .sort((a, b) => b._dateObj - a._dateObj)
@@ -193,85 +242,41 @@ export function mapDashboard({ clients, sales, variants }, days = 30) {
       status: "Completada",
     }));
 
-  // Mapa de clientes para mostrar nombre en tabla (si existe)
-  const clientsWithDate = (clients ?? []).map((c) => ({
-    ...c,
-    _registrationDate: toDate(pick(c, "registrationDate", "RegistrationDate")),
-  }));
-
   const clientsById = new Map(clientsWithDate.map((c) => [Number(pick(c, "id", "Id")), c]));
   for (const rs of recentSales) {
     const c = clientsById.get(Number(rs.clientId));
     rs.clientName = pick(c, "name", "Name") ?? `Cliente #${rs.clientId}`;
   }
 
-  // Métricas mensuales (Comparativa)
-  const monthlyGroups = {}; // "YYYY-MM" -> { label, salesCount, revenue, profit, clientCount }
-
-  // Agrupar Ventas
-  for (const s of salesWithDate) {
-    if (!s._dateObj) continue;
-    const key = `${s._dateObj.getFullYear()}-${String(s._dateObj.getMonth() + 1).padStart(2, "0")}`;
-    if (!monthlyGroups[key]) {
-      monthlyGroups[key] = {
-        key,
-        label: s._dateObj.toLocaleString("es-AR", { month: "short", year: "2-digit" }),
-        salesCount: 0,
-        revenue: 0,
-        profit: 0,
-        clientCount: 0,
-      };
-    }
-    monthlyGroups[key].salesCount += 1;
-    monthlyGroups[key].revenue += getSaleTotal(s);
-    monthlyGroups[key].profit += getSaleProfit(s);
-  }
-
-  // Agrupar Clientes (Registros)
-  for (const c of clientsWithDate) {
-    if (!c._registrationDate || c.isGuest || c.IsGuest) continue;
-    const key = `${c._registrationDate.getFullYear()}-${String(c._registrationDate.getMonth() + 1).padStart(2, "0")}`;
-    if (!monthlyGroups[key]) {
-      monthlyGroups[key] = {
-        key,
-        label: c._registrationDate.toLocaleString("es-AR", { month: "short", year: "2-digit" }),
-        salesCount: 0,
-        revenue: 0,
-        profit: 0,
-        clientCount: 0,
-      };
-    }
-    monthlyGroups[key].clientCount += 1;
-  }
-
-  const monthlyStats = Object.values(monthlyGroups).sort((a, b) => a.key.localeCompare(b.key));
+  const labelMonth = monthlyGroups[effectiveMonth]?.label || effectiveMonth;
 
   return {
     header: {
       title: "Panel de Control Principal",
-      subtitle: "Resumen ejecutivo de métricas de Clientes, Ventas y Stock",
-      rangeLabel: `Últimos ${days} días`,
+      subtitle: `Análisis de rendimiento para ${labelMonth}`,
+      rangeLabel: labelMonth,
+      selectedMonth: effectiveMonth
     },
     metrics: [
       {
         key: "clients",
-        title: "Clientes registrados",
-        value: String(clientsWithDate.filter((c) => !c.isGuest && !c.IsGuest).length),
-        deltaLabel: "+",
+        title: "Nuevos clientes",
+        value: String(periodNewClients),
+        deltaLabel: "en el mes",
         color: "emerald",
       },
       {
         key: "sales",
         title: "Ventas del mes",
         value: `${periodSalesCount}`,
-        deltaLabel: "",
+        deltaLabel: "operaciones",
         color: "blue",
       },
       {
         key: "profit",
-        title: "Ganancia estimada",
-        value: money(periodProfitTotal),
-        deltaLabel: "",
+        title: "Ingreso bruto",
+        value: money(periodSalesTotal),
+        deltaLabel: "en el mes",
         color: "amber",
       },
     ],
@@ -282,6 +287,6 @@ export function mapDashboard({ clients, sales, variants }, days = 30) {
       ranking: ranking.slice(0, 4)
     },
     recentSales,
-    monthlyStats, // Nueva propiedad
+    monthlyStats,
   };
 }

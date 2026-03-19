@@ -30,8 +30,8 @@ export function LandingHeader() {
                 <Link to="/" className="flex items-center gap-3">
                     <img src={logoMembrana} alt="Membranas Echesortu" className="h-10 w-10 object-contain" />
                     <span className="text-lg font-bold tracking-tight">
-                        <span className="text-orange-500">MEMBRANAS</span>{" "}
-                        <span className="text-gray-800">ECHESORTU</span>
+                        <span className="text-gray-800">MEMBRANAS</span>{" "}
+                        <span className="text-orange-500">ECHESORTU</span>
                     </span>
                 </Link>
 
@@ -62,7 +62,7 @@ export function LandingHeader() {
                             )}
                             <button
                                 onClick={handleLogout}
-                                className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors hidden sm:inline-block"
+                                className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors hidden sm:inline-block cursor-pointer"
                             >
                                 Cerrar Sesión
                             </button>
@@ -139,7 +139,7 @@ export function LandingHeader() {
                                     handleLogout();
                                     setMenuOpen(false);
                                 }}
-                                className="mt-2 text-center px-5 py-3 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="mt-2 text-center px-5 py-3 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                             >
                                 Cerrar Sesión
                             </button>

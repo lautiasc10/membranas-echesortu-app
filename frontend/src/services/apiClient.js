@@ -31,49 +31,32 @@ let isRefreshing = false;
 let refreshPromise = null;
 
 export const authFetch = async (url, options = {}) => {
-    let token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+    // 1. Agregar explícitamente el envío de cookies a cada request
+    const fetchOptions = {
+        ...options,
+        credentials: "include", // <-- VITAL para que viaje la cookie HTTPOnly
+        headers: {
+            ...options.headers,
+            "Accept": "application/json"
+        }
+    };
 
-    const getHeaders = (t) => ({
-        ...options.headers,
-        ...(t ? { "Authorization": `Bearer ${t}` } : {})
-    });
+    let res = await fetch(url, fetchOptions);
 
-    let res = await fetch(url, { ...options, headers: getHeaders(token) });
-
-    // Si explota por token vencido (401), intentamos refrescar la sesión silenciosamente
+    // 2. Si explota por token vencido (401), intentamos refrescar la sesión silenciosamente usando la refresh_cookie
     if (res.status === 401) {
-        const refreshToken = localStorage.getItem("refresh_token") || sessionStorage.getItem("refresh_token");
-
-        if (!refreshToken) return res; // No hay cómo refrescar, devuelvo el 401 original
-
         if (!isRefreshing) {
             isRefreshing = true;
             refreshPromise = fetch(`${baseUrl}/api/auth/refresh`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refreshToken })
+                credentials: "include" // <-- VITAL porque el refresh token viaja en cookie
             }).then(async refreshRes => {
                 if (!refreshRes.ok) throw new Error("Refresh failed");
-                const data = await refreshRes.json();
-                const newToken = data.Token || data.token;
-                const newRefresh = data.RefreshToken || data.refreshToken;
-
-                // Actualizar donde sea que estuviese guardado el token original (Local o Session)
-                if (localStorage.getItem("refresh_token")) {
-                    localStorage.setItem("auth_token", newToken);
-                    localStorage.setItem("refresh_token", newRefresh);
-                } else if (sessionStorage.getItem("refresh_token")) {
-                    sessionStorage.setItem("auth_token", newToken);
-                    sessionStorage.setItem("refresh_token", newRefresh);
-                }
-                return newToken;
+                return true;
             }).catch(err => {
-                // Si el refresh falla (ej: pasaron 7 días), limpiamos credenciales y forzamos re-login
-                localStorage.removeItem("auth_token");
-                localStorage.removeItem("refresh_token");
-                sessionStorage.removeItem("auth_token");
-                sessionStorage.removeItem("refresh_token");
-                window.location.href = "/login";
+                // Si el refresh falla (ej: expiró la sesión o token corrupto), matamos la sesión
+                window.dispatchEvent(new Event("auth:logout"));
                 throw err;
             }).finally(() => {
                 isRefreshing = false;
@@ -81,9 +64,9 @@ export const authFetch = async (url, options = {}) => {
         }
 
         try {
-            const newToken = await refreshPromise;
-            // Reintentar la petición original con el nuevo token mágico
-            res = await fetch(url, { ...options, headers: getHeaders(newToken) });
+            await refreshPromise;
+            // Reintentar la petición original ahora que hay cookies renovadas
+            res = await fetch(url, fetchOptions);
         } catch {
             return res; // Devolver el 401 si todo falló
         }
