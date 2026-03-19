@@ -29,4 +29,4 @@ jobs:
       
     - name: Run Tests
       # If unit tests project exists, this will run them
-      run: dotnet test tests/Application.Tests/Application.Tests.csproj --no-build --configuration Release --verbosity normal || echo "Warning: Unit tests might be skipped if not fully configured"
+      run: dotnet test tests/Application.Tests/Application.Tests.csproj --no-build --configuration Release --verbosity normal
