@@ -1,4 +1,3 @@
-# Stage 1: Build
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
@@ -7,11 +6,9 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Stage 2: Serve
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Mantenemos las rutas de React funcionando (History API)
 RUN echo 'server { \
     listen 80; \
     location / { \
