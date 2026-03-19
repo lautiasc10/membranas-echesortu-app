@@ -20,6 +20,8 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Prepare Enviroment
+      run: cp .env.example .env
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v4
