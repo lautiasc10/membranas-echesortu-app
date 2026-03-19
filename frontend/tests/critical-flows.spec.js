@@ -5,9 +5,8 @@ test.describe('Critical UI Flows', () => {
     test('Homepage loads correctly and shows navigation', async ({ page }) => {
         await page.goto('/');
 
-        // Check if header or some generic component loads
-        await expect(page.locator('header')).toBeVisible();
-        await expect(page.locator('text=/Contacto|Nosotros/i').first()).toBeVisible();
+        // Assert stable accessible elements
+        await expect(page.getByRole('heading', { name: /soluciones profesionales de/i }).first()).toBeVisible();
     });
 
     test('Can navigate to Login page and view form', async ({ page }) => {
