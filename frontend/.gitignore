@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Security
+.env
+.env.*
+!.env.example
+
+# Testing
+playwright-report/
+test-results/

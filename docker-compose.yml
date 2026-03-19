@@ -6,7 +6,7 @@ services:
     container_name: mbr_db
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${DB_PASSWORD:-YourDefaultStrong123!_Pwd}"
+      SA_PASSWORD: "${DB_PASSWORD}"
       MSSQL_PID: "Developer"
     ports:
       - "1433:1433"
@@ -20,8 +20,8 @@ services:
     container_name: mbr_backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - DefaultConnection=Server=db;Database=MembranasDb;User Id=sa;Password=${DB_PASSWORD:-YourDefaultStrong123!_Pwd};TrustServerCertificate=True;
-      - Jwt__Key=${JWT_SECRET:-EchesortMembranasAppSuperSeguroKey99A2024=}
+      - DefaultConnection=Server=db;Database=MembranasDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+      - Jwt__Key=${JWT_SECRET}
       - Jwt__Audience=https://membranas.com
       - Jwt__Issuer=https://membranas.com
     ports:
